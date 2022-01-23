@@ -60,11 +60,14 @@ autocmd BufWritePost $MYVIMRC source $MYVIMRC
 " 开启实时搜索功能
 set incsearch
 
-" 搜索时大小写不敏感
+
 set ignorecase
 
 " 关闭兼容模式
 set nocompatible
+
+" 设置insert模式下可以删除字符
+set backspace=indent,eol,start
 
 " vim 自身命令行模式智能补全
 set wildmenu
@@ -79,6 +82,7 @@ filetype off
 set rtp+=~/.vim/bundle/Vundle.vim
 " vundle 管理的插件列表必须位于 vundle#begin() 和 vundle#end() 之间
 call vundle#begin()
+
 
 Plugin 'VundleVim/Vundle.vim'
 Plugin 'altercation/vim-colors-solarized'
@@ -108,6 +112,7 @@ Plugin 'sjl/gundo.vim'
 Plugin 'Lokaltog/vim-easymotion'
 Plugin 'suan/vim-instant-markdown'
 Plugin 'lilydjwg/fcitx.vim'
+Plugin 'vim-scripts/google.vim'
 
 " 插件列表结束
 call vundle#end()
@@ -201,11 +206,11 @@ filetype indent on
 " 将制表符扩展为空格
 set expandtab
 " 设置编辑时制表符占用空格数
-set tabstop=4
+set tabstop=2
 " 设置格式化时制表符占用空格数
-set shiftwidth=4
+set shiftwidth=2
 " 让 vim 把连续数量的空格视为一个制表符
-set softtabstop=4
+set softtabstop=2
 
 " 缩进可视化插件 Indent Guides
 " 随 vim 自启动
@@ -216,6 +221,87 @@ let g:indent_guides_start_level=2
 let g:indent_guides_guide_size=1
 " 快捷键 i 开/关缩进可视化
 nmap <silent> <Leader>i <Plug>IndentGuidesToggle
+
+
+" Google C++规范代码格式化
+"
+if exists("b:did_indent")
+    finish
+endif
+let b:did_indent = 1
+
+
+function! GoogleCppIndent()
+    let l:cline_num = line('.')
+
+    let l:orig_indent = cindent(l:cline_num)
+
+    if l:orig_indent == 0 | return 0 | endif
+
+    let l:pline_num = prevnonblank(l:cline_num - 1)
+    let l:pline = getline(l:pline_num)
+    if l:pline =~# '^\s*template' | return l:pline_indent | endif
+
+    " TODO: I don't know to correct it:
+    " namespace test {
+    " void
+    " ....<-- invalid cindent pos
+    "
+    " void test() {
+    " }
+    "
+    " void
+    " <-- cindent pos
+    if l:orig_indent != &shiftwidth | return l:orig_indent | endif
+
+    let l:in_comment = 0
+    let l:pline_num = prevnonblank(l:cline_num - 1)
+    while l:pline_num > -1
+        let l:pline = getline(l:pline_num)
+        let l:pline_indent = indent(l:pline_num)
+
+        if l:in_comment == 0 && l:pline =~ '^.\{-}\(/\*.\{-}\)\@<!\*/'
+            let l:in_comment = 1
+        elseif l:in_comment == 1
+            if l:pline =~ '/\*\(.\{-}\*/\)\@!'
+                let l:in_comment = 0
+            endif
+        elseif l:pline_indent == 0
+            if l:pline !~# '\(#define\)\|\(^\s*//\)\|\(^\s*{\)'
+                if l:pline =~# '^\s*namespace.*'
+                    return 0
+                else
+                    return l:orig_indent
+                endif
+            elseif l:pline =~# '\\$'
+                return l:orig_indent
+            endif
+        else
+            return l:orig_indent
+        endif
+
+        let l:pline_num = prevnonblank(l:pline_num - 1)
+    endwhile
+
+    return l:orig_indent
+endfunction
+
+setlocal shiftwidth=2
+setlocal tabstop=2
+setlocal softtabstop=2
+setlocal expandtab
+setlocal textwidth=80
+setlocal wrap
+
+setlocal cindent
+setlocal cinoptions=h1,l1,g1,t0,i4,+4,(0,w1,W4
+
+setlocal indentexpr=GoogleCppIndent()
+
+let b:undo_indent = "setl sw< ts< sts< et< tw< wrap< cin< cino< inde<"
+
+"noremap <Leader>FM :call GoogleCppIndent()<CR>
+
 
 " <<
 
@@ -505,8 +591,8 @@ map <leader>rs :source my.vim<cr>
 " <<
  
 " 设置快捷键实现一键编译及运行
-nmap <Leader>m :wa<CR> :cd build/<CR> :!rm -rf main<CR> :!cmake CMakeLists.txt<CR>:make<CR><CR> :cw<CR> :cd ..<CR>
-nmap <Leader>g :wa<CR>:cd build/<CR>:!rm -rf main<CR>:!cmake CMakeLists.txt<CR>:make<CR><CR>:cw<CR>:cd ..<CR>:!build/main<CR>
+"nmap <Leader>m :wa<CR> :cd build/<CR> :!rm -rf main<CR> :!cmake CMakeLists.txt<CR>:make<CR><CR> :cw<CR> :cd ..<CR>
+"nmap <Leader>g :wa<CR>:cd build/<CR>:!rm -rf main<CR>:!cmake CMakeLists.txt<CR>:make<CR><CR>:cw<CR>:cd ..<CR>:!build/main<CR>
 
 " >>
 " 快速选中结对符内的文本
