@@ -112,7 +112,6 @@ Plugin 'sjl/gundo.vim'
 Plugin 'Lokaltog/vim-easymotion'
 Plugin 'suan/vim-instant-markdown'
 Plugin 'lilydjwg/fcitx.vim'
-Plugin 'vim-scripts/google.vim'
 
 " 插件列表结束
 call vundle#end()
@@ -501,7 +500,8 @@ let g:ycm_confirm_extra_conf=0
 let g:ycm_collect_identifiers_from_tags_files=0
 "" 引入 C++ 标准库 tags
 "set tags+=/data/misc/software/app/vim/stdcpp.tags
-"set tags+=/data/misc/software/app/vim/sys.tags
+"set tags+=/data/misc/software/app/vim/sys.tag
+"set tags+=/usr/include/c++/4.8.5/stdcpp.tagss
 
 " YCM 集成 OmniCppComplete 补全引擎，设置其快捷键
 inoremap <leader>; <C-x><C-o>
@@ -547,7 +547,7 @@ nmap <Leader>fl :NERDTreeToggle<CR>
 " 设置 NERDTree 子窗口宽度
 let NERDTreeWinSize=22
 " 设置 NERDTree 子窗口位置
-let NERDTreeWinPos="right"
+let NERDTreeWinPos="left"
 " 显示隐藏文件
 let NERDTreeShowHidden=1
 " NERDTree 子窗口中不显示冗余帮助信息
